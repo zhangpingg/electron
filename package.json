@@ -1,0 +1,16 @@
+{
+  "name": "electron-project-name",
+  "version": "1.0.0",
+  "description": "electron study",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "start:watch": "nodemon --watch main.js --exec electron ."
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^23.2.0",
+    "nodemon": "^2.0.21"
+  }
+}
