@@ -1,3 +1,5 @@
+// const { dialog } = require('@electron/remote')
+
 // 渲染器：渲染数据到页面上
 const versionsInfo = document.getElementById('box1');
 versionsInfo.innerText = `Node.js:v${versions.node()} | Chrome:v${versions.chrome()} | Electron:v${versions.electron()}`;

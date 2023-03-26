@@ -10,61 +10,25 @@ const path = require('path')
 const fs = require('fs')
 const https = require('https')
 
-let mainWindow;   // 窗口实例
+let win;          // 窗口实例
 let tray;         // 托盘实例
 const iconPath = path.join(__dirname, './img/icon.png')   // 图标
 
-// 创建窗口的方法
-const createWindow = () => {
-  mainWindow = new BrowserWindow({  // 创建窗口
-    width: 800,
-    height: 600,
-    icon: iconPath,                 // 应用运行时的标题栏图标
-    resizable: false,               // 是否允许改变窗口大小
-    // frame: false,                // 是否有chrome窗口边框（顶部工具栏，控件等）
-    // titleBarStyle: 'hidden',        // chrome窗口边框的样式（注释取消，下方的样式才启作用）
-    titleBarOverlay: {              // 窗口右上角的按钮
-      color: '#2f3241',
-      symbolColor: '#74b1be',
-      height: 60
-    },
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),    // 引入预加载脚本
-      backgroundThrottling: false,                    // 是否设置应用在后台正常运行
-      nodeIntegration: true,                           // 是否设置能在页面使用nodejs的API
-      // contextIsolation: false,                     // false:渲染器用不了预加载脚本设置的全局变量
-    }
-  })
-  mainWindow.loadURL(path.join(__dirname, 'index.html'));    // 窗口展示的html文件（loadFile也可以）
-  // mainWindow.webContents.openDevTools();                  // 打开开发工具
-
-  // 在Electron浏览窗口上的快捷键：ctrl+i（在调度页面中的keydown和keyup事件之前，会发出before-input-event事件）
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.control && input.key.toLowerCase() === 'i') {
-      console.log('Pressed Control+I')
-      event.preventDefault(); // 渲染器中的快捷键被拦截了
-    }
-  })
-}
-
-// 处理此外部协议被点击的事件
-const gotTheLock = app.requestSingleInstanceLock()
+// 用户正在尝试运行第二个实例
+const gotTheLock = app.requestSingleInstanceLock();       // 应用实例当前是否持有单例锁(请求锁,即只能创建一个实例)
 if (!gotTheLock) {
   app.quit()
 } else {
-  // 处理此外部协议被点击的事件
+  // 用户尝试运行第二个实例，我们需要让焦点指向我们的窗口
   app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // 用户正在尝试运行第二个实例，我们需要让焦点指向我们的窗口
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
+    if (win) {
+      if (win.isMinimized()) win.restore()
+      win.focus()
     }
-    dialog.showErrorBox('Welcome Back', `You arrived from: ${commandLine.pop().slice(0, -1)}`)
   })
   // 只有在 app 模块的 ready 事件被激发后才能创建浏览器窗口
   app.on('ready', () => {
     createWindow();
-
     ipcMain.handle('fn1', () => '触发成功');              // 主进程处理程序         
     ipcMain.handle('dark-mode:toggle', () => {
       if (nativeTheme.shouldUseDarkColors) {
@@ -86,10 +50,10 @@ if (!gotTheLock) {
     tray.setContextMenu(menuConfig);
     tray.setToolTip('托盘图标-悬浮时的提示信息');
     tray.on('click', () => {                      // 点击图标的响应事件，切换主窗口的显示和隐藏
-      if (mainWindow.isVisible()) {
-        mainWindow.hide();
+      if (win.isVisible()) {
+        win.hide();
       } else {
-        mainWindow.show();
+        win.show();
       }
     })
     // tray.on('right-click', () => {                // 右键点击图标时，出现的菜单（和上面第一次插入的菜单有冲突，上面的优先级高）
@@ -102,6 +66,9 @@ if (!gotTheLock) {
     //   tray.popUpContextMenu(menuConfig)
     // })
 
+    // require('@electron/remote/main').initialize()
+    // require("@electron/remote/main").enable(myWindow.webContents) //使用前需要先创建窗口实例
+
     // 监听：在 macOS 系统内, 如果没有已开启的应用窗口，点击托盘图标时通常会重新创建一个新窗口
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -109,8 +76,8 @@ if (!gotTheLock) {
       };
     })
     // 监听全局键盘事件
-    globalShortcut.register('Alt+Ctrl+I', () => {
-      console.log('keyboard: Alt+ctrl+I');
+    globalShortcut.register('Ctrl+R', () => {
+      win.reload();
     })
   })
 }
@@ -134,4 +101,36 @@ app.on('window-all-closed', () => {
 // }))
 // Menu.setApplicationMenu(menu)
 
+// 创建窗口的方法
+function createWindow() {
+  win = new BrowserWindow({  // 创建窗口
+    width: 800,
+    height: 600,
+    icon: iconPath,                 // 应用运行时的标题栏图标
+    resizable: false,               // 是否允许改变窗口大小
+    // frame: false,                // 是否有chrome窗口边框（顶部工具栏，控件等）
+    // titleBarStyle: 'hidden',        // chrome窗口边框的样式（注释取消，下方的样式才启作用）
+    titleBarOverlay: {              // 窗口右上角的按钮
+      color: '#2f3241',
+      symbolColor: '#74b1be',
+      height: 60
+    },
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),    // 引入预加载脚本
+      backgroundThrottling: false,                    // 是否设置应用在后台正常运行
+      nodeIntegration: true,                           // 是否设置能在页面使用nodejs的API
+      // contextIsolation: false,                     // false:渲染器用不了预加载脚本设置的全局变量
+      // contextIsolation:false,                      //上下文隔离，设置false之后可以使用require
+      enableRemoteModule: true       // 启用remote功能，启用之后可以在渲染进程中使用remote
+    }
+  })
+  win.loadURL(path.join(__dirname, 'index.html'));    // 窗口展示的html文件（loadFile也可以）
 
+  // 在Electron浏览窗口上的快捷键：ctrl+i（在调度页面中的keydown和keyup事件之前，会发出before-input-event事件）
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.control && input.key.toLowerCase() === 't') {   // ctrl+T：打开开发工具
+      win.webContents.openDevTools();
+      event.preventDefault();                                 // 渲染器中的快捷键被拦截了
+    }
+  })
+}
