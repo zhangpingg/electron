@@ -27,12 +27,3 @@ contextBridge.exposeInMainWorld('darkMode', {
   toggle: () => ipcRenderer.invoke('dark-mode:toggle'),
   system: () => ipcRenderer.invoke('dark-mode:system')
 })
-
-const btn4 = document.getElementById('btn4');
-// btn4.onclick = async function () {
-//   console.log(1);
-//   ipcRenderer.send('mainWindow:close')
-// }
-// btn4.addEventListener('click', () => {
-//   ipcRenderer.send('mainWindow:close')
-// })
