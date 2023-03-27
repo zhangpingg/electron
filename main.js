@@ -5,14 +5,16 @@
 // Tray：系统拖盘
 // ipcMain: 设置主进程处理程序（用于进程间通信）
 // globalShortcut: 监听全局键盘事件
-const { app, BrowserWindow, ipcMain, nativeTheme, Menu, MenuItem, globalShortcut, Tray, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, nativeTheme, Menu, MenuItem, globalShortcut, Tray } = require('electron');
 const path = require('path')
-const fs = require('fs')
-const https = require('https')
+const { autoUpdater } = require('electron-updater');  // 自动收到更新包的提示
 
 let win;          // 窗口实例
 let tray;         // 托盘实例
 const iconPath = path.join(__dirname, './img/icon.png')   // 图标
+let host = 'http://localhost:8003';                       // 窗口展示的web地址
+let exeDownload = `http://192.168.1.123:7001/static`;     // 更新客户端的下载地址
+
 
 // 用户正在尝试运行第二个实例
 const gotTheLock = app.requestSingleInstanceLock();       // 应用实例当前是否持有单例锁(请求锁,即只能创建一个实例)
@@ -125,7 +127,7 @@ function createWindow() {
     }
   })
   win.loadURL(path.join(__dirname, 'index.html'));    // 窗口展示的html文件（loadFile也可以）
-
+  checkUpdate();
   // 在Electron浏览窗口上的快捷键：ctrl+i（在调度页面中的keydown和keyup事件之前，会发出before-input-event事件）
   win.webContents.on('before-input-event', (event, input) => {
     if (input.control && input.key.toLowerCase() === 't') {   // ctrl+T：打开开发工具
@@ -133,4 +135,36 @@ function createWindow() {
       event.preventDefault();                                 // 渲染器中的快捷键被拦截了
     }
   })
+}
+// 检查是否有可更新的版本
+function checkUpdate() {
+  autoUpdater.setFeedURL(exeDownload);        // 设置更新服务的地址
+  autoUpdater.checkForUpdates();              // 询问服务器是否有可用更新
+  autoUpdater.autoInstallOnAppQuit = false;   // 是否在应用程序退出时自动安装下载的更新
+  autoUpdater.autoDownload = false;           // 发现更新后是否自动下载更新(默认true)
+  autoUpdater.on('error', () => {             // 监听: 如果自动更新失败触发
+    log.info(autoUpdater.getFeedURL());
+    dialog.showMessageBox({
+      type: 'info',
+      title: '应用更新',
+      message: '升级服务不可用，请联系管理员',
+    });
+  });
+  autoUpdater.on('update-available', async () => {    // 监听: 检测有可更新的应用包触发
+    autoUpdater.downloadUpdate();                     // 开始手动下载更新
+  });
+  autoUpdater.on('update-downloaded', async () => {   // 监听: 新版本下载完成时触发
+    const result = await dialog.showMessageBox({
+      type: 'info',
+      title: '应用更新',
+      message: '发现新版本，是否更新？',
+      buttons: ['是', '否'],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (result.response === 0) {
+      autoUpdater.quitAndInstall();           // 应用程序退出时自动安装下载的更新
+      app.quit();
+    }
+  });
 }
