@@ -16,6 +16,7 @@ const {
   Tray,
 } = require('electron');
 const path = require('path');
+const http = require('http');
 const { autoUpdater } = require('electron-updater'); // 自动收到更新包的提示
 
 let win; // 窗口实例
@@ -29,6 +30,29 @@ const gotTheLock = app.requestSingleInstanceLock(); // 应用实例当前是否�
 if (!gotTheLock) {
   app.quit();
 } else {
+  http
+    .createServer((req, res) => {
+      // 搭建一个简单的服务器，监听接口请求，处理窗口的一些设置
+      res.writeHead(200, {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      });
+      const { url } = req;
+      if (url.includes('minimize')) {
+        win.minimize(); // 窗口最小化
+      }
+      if (url.includes('maximize')) {
+        win.maximize(); // 窗口最大化
+      }
+      if (url.includes('restore')) {
+        win.restore(); // 窗口恢复默认
+      }
+      if (url.includes('close')) {
+        win.close(); // 窗口关闭
+      }
+      res.end('done');
+    })
+    .listen(9099); // 监听的是electronFnc.ts里面的端口
   // 用户尝试运行第二个实例，我们需要让焦点指向我们的窗口
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     if (win) {

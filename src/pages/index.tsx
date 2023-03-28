@@ -1,4 +1,10 @@
 import { useEffect, useState } from 'react';
+import {
+  maximizeWin,
+  minimizeWin,
+  restoreWin,
+  closeWin,
+} from '@/utils/electronFnc';
 
 const Index = () => {
   const [versionsInfo, setVersionsInfo] = useState<string>();
@@ -33,6 +39,23 @@ const Index = () => {
   const handleKeyPress = (event: any) => {
     setKey(event.key);
   };
+  // 改变窗口大小
+  const changeWinSize = (type: string) => {
+    switch (type) {
+      case 'maximize':
+        maximizeWin();
+        break;
+      case 'minimize':
+        minimizeWin();
+        break;
+      case 'restore':
+        restoreWin();
+        break;
+      case 'close':
+        closeWin();
+        break;
+    }
+  };
 
   useEffect(() => {
     fn1();
@@ -58,7 +81,13 @@ const Index = () => {
       <button onClick={resetSkin}>恢复系统默认肤色(System=Light)</button> <br />
       <br />
       4) preload.js(预加载脚本)/渲染器都可以设置监听键盘keyup事件 <br />
-      监听键盘按下的键: {key}
+      监听键盘按下的键: {key} <br />
+      <br />
+      5) 窗口的变化 <br />
+      <button onClick={() => changeWinSize('maximize')}>最大化</button> <br />
+      <button onClick={() => changeWinSize('minimize')}>最小化</button> <br />
+      <button onClick={() => changeWinSize('restore')}>恢复</button> <br />
+      <button onClick={() => changeWinSize('close')}>关闭窗口</button> <br />
     </div>
   );
 };
