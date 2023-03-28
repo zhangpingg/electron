@@ -4,6 +4,7 @@
 /node_modules
 /npm-debug.log*
 /yarn-error.log
+/yarn.lock
 /package-lock.json
 
 # production
@@ -11,16 +12,9 @@
 
 # misc
 .DS_Store
-.history
 
 # umi
 /src/.umi
 /src/.umi-production
 /src/.umi-test
 /.env.local
-
-# intellij files
-.idea/
-*.iml
-*.ipr
-*.iws
