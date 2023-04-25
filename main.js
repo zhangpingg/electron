@@ -60,6 +60,8 @@ if (!gotTheLock) {
       win.focus();
     }
   });
+  // 禁用 HTTP 缓, 每次从服务器请求资源时，都会从服务器获取最新的内容，而不会使用已缓存的旧内容
+  app.commandLine.appendSwitch('--disable-http-cache');
   // 只有在 app 模块的 ready 事件被激发后才能创建浏览器窗口
   app.on('ready', () => {
     createWindow();
