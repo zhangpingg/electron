@@ -1,15 +1,6 @@
-# umi project
-
-## Getting Started
-
-Install dependencies,
-
 ```bash
-$ yarn
-```
+yarn
+yarn start
 
-Start the dev server,
-
-```bash
-$ yarn start
+electron 客户端
 ```
